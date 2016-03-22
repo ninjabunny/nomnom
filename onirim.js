@@ -103,6 +103,11 @@ function prophesey(){
 	porfetContainer.push(deck.shift());
 	porfetContainer.push(deck.shift());
 	porfetContainer.push(deck.shift());
+
+	//display
+	var divider = $("<li data-role='divider' data-theme='e' class='ui-li ui-li-static ui-btn-up-e ui-first-child'>Discard a Card</li>");
+	var temp = $("<li id='card1' onclick='bindAction(1);' style='background: red;' data-corners='false' data-shadow='false' data-iconshadow='true' data-wrapperels='div' data-icon='arrow-r' data-iconpos='right' data-theme='c' class='ui-btn ui-btn-up-c ui-btn-icon-right ui-li-has-arrow ui-li'><div class='ui-btn-inner ui-li'><div class='ui-btn-text'><a data-rel='popup' href='#popupMenu' class='ui-link-inherit' aria-haspopup='true' aria-owns='popupMenu' aria-expanded='false'><h2 class='ui-li-heading'>sun</h2></a></div><span class='ui-icon ui-icon-arrow-r ui-icon-shadow'>&nbsp;</span></div></li>");
+	$('#profet' + ' ul').empty().append(divider).append(temp);
 }
 function checkForTripleType(){
 	if(playedCards.length > 2){
@@ -111,7 +116,9 @@ function checkForTripleType(){
 			for(var i = 0;i<deck.length;i++){
 				if(deck[i].type === 'door' && deck[i].suit === playedCards[playedCards.length - 3].suit){
 					doorsFound.push(deck.splice(i, 1)[0]);
+					updateCardCount();
 					deck = shuffle(deck);
+					alert(deck[i].suit + ' door found!')
 					//TODO: update DOORS!
 					break;
 				}

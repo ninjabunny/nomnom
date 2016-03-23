@@ -6,6 +6,7 @@ var playedCards = [];
 var doorsFound = [];
 var discardCards = [];
 var porfetContainer = [];
+var limbo = [];
 
 for(var i = 0; i < 4; i++){
 	deck.push({type: "door", suit: typeName[i]});
@@ -60,18 +61,24 @@ while(hand.length < 5){
 
 var discardPile = [];
 var enabledDoors = [];
-function play(position){
-	//check if previous symbol is the same, else not playable
 
-	//if 3in a row same suit, then obtain door of that suit
-	if(discardPile.length > 2){
-		if(discardPile[0].suit === discardPile[1].suit && discardPile[1].suit === discardPile[2].suit){
-			//get door of that suit
-			for(var i = 0;i < deck.length; i++){
-				if(deck[i].type === "door" && deck[i].suit === discardPile[0].suit){
-
-				}
+function drawCard(){
+	if(deck[0].type !== 'door' && deck[0].type !== 'dream' || true){
+		hand.push(deck.shift());
+		updateCardCount();
+		updatePlayedCards();
+		updateHand();
+	} else if(deck[0].type === 'door'){
+		for(var i = 0;i<hand.length;i++){
+			if(hand[i].type === 'key' && hand[i].suit === deck[0].suit){
+				//unlock option
+				alert('unlock option');
+			} else {
+				//put door in limbo
+				limbo.push(deck.shift());
+				drawCard();
 			}
+
 		}
 	}
 }
@@ -88,13 +95,20 @@ function bindAction(num){
 		playedCards.push(hand.splice(num, 1)[0]);
 		updatePlayedCards();
 		checkForTripleType();
+		drawCard();
 	});
+	if(hand[num].type === 'key'){
+		$('#discardbtn a').attr('data-rel', 'popup');
+	} else {
+		$('#discardbtn a').attr('data-rel', 'back');
+	}
 	$('#discardbtn').unbind();
 	$('#discardbtn').bind('click', function(){
 		if(hand[num].type === 'key'){
 			prophesey();
 		}
 		discardCards.push(hand.splice(num, 1)[0]);
+		drawCard();
 	});
 }
 function prophesey(){
@@ -106,8 +120,41 @@ function prophesey(){
 
 	//display
 	var divider = $("<li data-role='divider' data-theme='e' class='ui-li ui-li-static ui-btn-up-e ui-first-child'>Discard a Card</li>");
-	var temp = $("<li id='card1' onclick='bindAction(1);' style='background: red;' data-corners='false' data-shadow='false' data-iconshadow='true' data-wrapperels='div' data-icon='arrow-r' data-iconpos='right' data-theme='c' class='ui-btn ui-btn-up-c ui-btn-icon-right ui-li-has-arrow ui-li'><div class='ui-btn-inner ui-li'><div class='ui-btn-text'><a data-rel='popup' href='#popupMenu' class='ui-link-inherit' aria-haspopup='true' aria-owns='popupMenu' aria-expanded='false'><h2 class='ui-li-heading'>sun</h2></a></div><span class='ui-icon ui-icon-arrow-r ui-icon-shadow'>&nbsp;</span></div></li>");
-	$('#profet' + ' ul').empty().append(divider).append(temp);
+	$('#profet' + ' ul').empty().append(divider);
+	for(var i = 0;i< porfetContainer.length;i++){
+		var temp = $("<li id='prof" + i + "' onclick='discardProf("+ i + ");' data-corners='false' data-shadow='false' data-iconshadow='true' data-wrapperels='div' data-icon='arrow-r' data-iconpos='right' data-theme='c' class='ui-btn ui-btn-up-c ui-btn-icon-right ui-li-has-arrow ui-li'><div class='ui-btn-inner ui-li'><div class='ui-btn-text'><a data-rel='popup' href='#' class='ui-link-inherit' aria-haspopup='true' aria-owns='popupMenu' aria-expanded='false'><h2 class='ui-li-heading'>" + porfetContainer[i].type + "</h2></a></div><span class='ui-icon ui-icon-arrow-r ui-icon-shadow'>&nbsp;</span></div></li>");
+		$('#profet' + ' ul').append(temp);
+		$("#prof" + i).css("background", porfetContainer[i].suit).bind("click", function(){
+			$(this).hide();
+		});
+	}
+	
+}
+function discardProf(num){
+	discardCards.push(porfetContainer.splice(num, 1)[0]);
+	stackyThing();
+}
+function stackyThing(){
+	var divider = $("<li data-role='divider' data-theme='e' class='ui-li ui-li-static ui-btn-up-e ui-first-child'>Put on top of Deck</li>");
+	$('#profet' + ' ul').empty().append(divider);
+	for(var i = 0;i< porfetContainer.length;i++){
+		var temp = $("<li id='prof" + i + "' onclick='addToDeck("+ i + ");' data-corners='false' data-shadow='false' data-iconshadow='true' data-wrapperels='div' data-icon='arrow-r' data-iconpos='right' data-theme='c' class='ui-btn ui-btn-up-c ui-btn-icon-right ui-li-has-arrow ui-li'><div class='ui-btn-inner ui-li'><div class='ui-btn-text'><a data-rel='popup' href='#' class='ui-link-inherit' aria-haspopup='true' aria-owns='popupMenu' aria-expanded='false'><h2 class='ui-li-heading'>" + porfetContainer[i].type + "</h2></a></div><span class='ui-icon ui-icon-arrow-r ui-icon-shadow'>&nbsp;</span></div></li>");
+		$('#profet' + ' ul').append(temp);
+		$("#prof" + i).css("background", porfetContainer[i].suit).bind("click", function(){
+			$(this).unbind().hide();
+		});
+	}
+	if(porfetContainer.length === 1){
+		$("#prof0 a").attr('data-rel', 'back');
+		$("#prof0 a").bind("click", function(){
+			drawCard();
+		});
+		
+	}
+}
+function addToDeck(num){
+	deck.unshift(porfetContainer.splice(num, 1)[0]);
+	stackyThing();
 }
 function checkForTripleType(){
 	if(playedCards.length > 2){
@@ -118,7 +165,7 @@ function checkForTripleType(){
 					doorsFound.push(deck.splice(i, 1)[0]);
 					updateCardCount();
 					deck = shuffle(deck);
-					alert(deck[i].suit + ' door found!')
+					alert(doorsFound[doorsFound.length - 1].suit + ' door found!')
 					//TODO: update DOORS!
 					break;
 				}
@@ -161,11 +208,14 @@ function updateCardCount(){
 }
 updateCardCount();
 
-
-for(var i = 0;i < hand.length; i++){
-	$("#card" + i + " h2").html(hand[i].type);
-	$("#card" + i).attr('onclick', 'bindAction(' + i + ');').css("background", hand[i].suit);
+function updateHand(){
+	for(var i = 0;i < hand.length; i++){
+		$("#card" + i + " h2").html(hand[i].type);
+		$("#card" + i).attr('onclick', 'bindAction(' + i + ');').css("background", hand[i].suit);
+	}
 }
+updateHand();
+
 // var c = $("<li class='displayOnly'><a id='playbtn' href='#' data-inline='true'>Play</a></li><li class='displayOnly'><a href='#' id='discardbtn' data-inline='true'>Discard</a></li>");
 // $("#lv").append(c);
 
